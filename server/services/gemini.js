@@ -90,21 +90,25 @@ ${transcript.trim()}`
 
     const extractedData = JSON.parse(response.text);
 
-    const textFields = [
+    const requiredTextFields = [
       'itemName',
       'category',
       'color',
-      'description',
       'location'
     ];
 
-    for (const field of textFields) {
+    for (const field of requiredTextFields) {
       if (
         typeof extractedData[field] !== 'string' ||
         !extractedData[field].trim()
       ) {
         throw new Error(`Invalid Gemini response field: ${field}`);
       }
+    }
+
+    // Description is optional and may legitimately be empty.
+    if (typeof extractedData.description !== 'string') {
+      throw new Error('Invalid Gemini response field: description');
     }
 
     if (
