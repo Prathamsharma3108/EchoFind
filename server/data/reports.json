@@ -1,0 +1,63 @@
+
+[
+  {
+    "id": "9f225c5e-7ebe-469f-bdc3-fb664cee671b",
+    "type": "LOST",
+    "itemName": "Umbrella",
+    "category": "accessories",
+    "color": "red",
+    "description": "Red folding umbrella with black handle",
+    "location": "College library",
+    "reportedAt": "2026-11-04",
+    "createdAt": "2026-11-04T04:47:51.360Z",
+    "status": "OPEN"
+  },
+  {
+    "id": "a08c2a3b-38de-4804-ad14-de7a361a6682",
+    "type": "FOUND",
+    "itemName": "Umbrella",
+    "category": "accessories",
+    "color": "red",
+    "description": "Red folding umbrella with black handle",
+    "location": "College library",
+    "reportedAt": "2026-11-04",
+    "createdAt": "2026-11-04T04:48:24.114Z",
+    "status": "OPEN"
+  },
+  {
+    "id": "08e152d0-8db2-487f-a0b7-ced62e109574",
+    "type": "LOST",
+    "itemName": "water bottle",
+    "category": "accessories",
+    "color": "blue",
+    "description": "blue water bottle",
+    "location": "college cafeteria",
+    "reportedAt": null,
+    "createdAt": "2026-11-04T05:06:01.105Z",
+    "status": "OPEN"
+  },
+  {
+    "id": "452b08a5-e884-4009-b4bb-7eafaab1264e",
+    "type": "LOST",
+    "itemName": "wallet",
+    "category": "accessories",
+    "color": "black",
+    "description": "leather wallet",
+    "location": "college library",
+    "reportedAt": null,
+    "createdAt": "2026-11-04T05:27:05.684Z",
+    "status": "OPEN"
+  },
+  {
+    "id": "2e20c231-ca97-4920-8b62-96d62a6c7525",
+    "type": "FOUND",
+    "itemName": "wallet",
+    "category": "accessories",
+    "color": "black",
+    "description": "leather wallet",
+    "location": "near the library",
+    "reportedAt": null,
+    "createdAt": "2026-11-04T05:44:15.015Z",
+    "status": "OPEN"
+  }
+]

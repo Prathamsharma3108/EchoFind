@@ -1,0 +1,10 @@
+[
+  {
+    "id": "8344722c-a24c-42a9-af3b-934bc85fea6e",
+    "lostItemId": "452b08a5-e884-4009-b4bb-7eafaab1264e",
+    "foundItemId": "2e20c231-ca97-4920-8b62-96d62a6c7525",
+    "contact": "test@example.com",
+    "status": "PENDING",
+    "createdAt": "2026-11-04T05:44:49.002Z"
+  }
+]
