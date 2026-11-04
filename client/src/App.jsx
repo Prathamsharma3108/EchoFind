@@ -86,10 +86,14 @@ function App() {
     setClaimError('');
   };
 
-  // Open claim form for a selected match
+  // Open claim form and guide the user
   const handleOpenClaim = (matchId) => {
     resetClaimState();
     setSelectedMatchId(matchId);
+
+    announce(
+      'To submit a claim, please enter your email address or phone number. Your contact information will remain private.'
+    );
   };
 
   // Start or stop voice recording
@@ -157,12 +161,27 @@ function App() {
 
       const matchCount = data.matches?.length || 0;
 
-      let announcement = `Your ${reportType.toLowerCase()} item report has been submitted. `;
+      let announcement =
+        `Your ${reportType.toLowerCase()} item report has been submitted. `;
 
       if (matchCount > 0) {
-        announcement += `We found ${matchCount} possible ${
-          matchCount === 1 ? 'match' : 'matches'
-        }.`;
+        const bestMatch = data.matches[0].reportDetails;
+
+        const itemName = bestMatch?.itemName || 'an item';
+        const color = bestMatch?.color;
+        const location = bestMatch?.location;
+
+        announcement +=
+          `We found ${matchCount} possible ${
+            matchCount === 1 ? 'match' : 'matches'
+          }. One possible match is ${color ? `${color} ` : ''}${itemName}.`;
+
+        if (location) {
+          announcement += ` It was reported near ${location}.`;
+        }
+
+        announcement +=
+          ' You can review the match on your screen and submit a claim.';
       } else {
         announcement +=
           'We did not find any immediate matches, but we will keep checking.';
@@ -230,7 +249,10 @@ function App() {
       }
 
       setClaimStatus('success');
-      announce('Your claim has been submitted successfully.');
+
+      announce(
+        'Your claim has been submitted and is pending review. Your contact information is kept private.'
+      );
     } catch (err) {
       console.error(err);
       setClaimStatus('error');

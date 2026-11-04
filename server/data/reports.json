@@ -1,4 +1,3 @@
-
 [
   {
     "id": "9f225c5e-7ebe-469f-bdc3-fb664cee671b",
@@ -58,6 +57,18 @@
     "location": "near the library",
     "reportedAt": null,
     "createdAt": "2026-11-04T05:44:15.015Z",
+    "status": "OPEN"
+  },
+  {
+    "id": "5bc87c8a-3fda-40c0-9234-ef2b869b1160",
+    "type": "LOST",
+    "itemName": "wallet",
+    "category": "accessories",
+    "color": "black",
+    "description": "black wallet",
+    "location": "near the library",
+    "reportedAt": null,
+    "createdAt": "2026-11-04T06:04:02.970Z",
     "status": "OPEN"
   }
 ]
