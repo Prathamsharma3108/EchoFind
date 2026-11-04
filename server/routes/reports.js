@@ -1,53 +1,20 @@
 
 import express from 'express';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
+import { getDB } from '../config/db.js';
 import { findMatches } from '../utils/matcher.js';
 import { extractItemDetails } from '../services/gemini.js';
 
 const router = express.Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const REPORTS_FILE = path.join(__dirname, '../data/reports.json');
-
-// Read reports from JSON storage
-async function getReports() {
-  try {
-    const data = await fs.readFile(REPORTS_FILE, 'utf-8');
-    const reports = JSON.parse(data);
-
-    if (!Array.isArray(reports)) {
-      throw new Error('Invalid reports database format');
-    }
-
-    return reports;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return [];
-    }
-
-    throw error;
-  }
-}
-
-// Save reports to JSON storage
-async function saveReports(reports) {
-  await fs.writeFile(
-    REPORTS_FILE,
-    JSON.stringify(reports, null, 2),
-    'utf-8'
-  );
-}
-
 // GET /api/reports
 router.get('/', async (req, res, next) => {
   try {
-    const reports = await getReports();
+    const reports = await getDB()
+      .collection('reports')
+      .find({}, { projection: { _id: 0 } })
+      .toArray();
 
     res.status(200).json({
       success: true,
@@ -88,7 +55,7 @@ router.post('/', async (req, res, next) => {
 
     let itemDetails;
 
-    // If a voice transcript is provided, extract details using Gemini
+    // Extract details from voice transcript using Gemini
     if (transcript !== undefined) {
       if (
         typeof transcript !== 'string' ||
@@ -106,7 +73,7 @@ router.post('/', async (req, res, next) => {
         normalizedType
       );
     } else {
-      // Manual report submission remains supported
+      // Manual report submission
       itemDetails = {
         itemName,
         category,
@@ -117,7 +84,7 @@ router.post('/', async (req, res, next) => {
       };
     }
 
-    // Validate extracted or manually supplied item name
+    // Validate item name
     if (
       typeof itemDetails.itemName !== 'string' ||
       !itemDetails.itemName.trim() ||
@@ -177,14 +144,21 @@ router.post('/', async (req, res, next) => {
       status: 'OPEN'
     };
 
-    const reports = await getReports();
+    const reportsCollection = getDB().collection('reports');
 
-    // Save the new report
-    reports.push(newReport);
-    await saveReports(reports);
+    // Fetch existing reports for matching
+    const existingReports = await reportsCollection
+      .find({}, { projection: { _id: 0 } })
+      .toArray();
 
-    // Find matching reports
-    const matches = findMatches(newReport, reports);
+    // Save report to MongoDB
+    await reportsCollection.insertOne(newReport);
+
+    // Include the new report when finding matches
+    const matches = findMatches(newReport, [
+      ...existingReports,
+      newReport
+    ]);
 
     res.status(201).json({
       success: true,

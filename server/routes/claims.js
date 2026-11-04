@@ -1,81 +1,27 @@
 
 import express from 'express';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
+import { getDB } from '../config/db.js';
+
 const router = express.Router();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const CLAIMS_FILE = path.join(__dirname, '../data/claims.json');
-const REPORTS_FILE = path.join(__dirname, '../data/reports.json');
-
-// Read claims from JSON storage
-async function getClaims() {
-  try {
-    const data = await fs.readFile(CLAIMS_FILE, 'utf-8');
-    const claims = JSON.parse(data);
-
-    if (!Array.isArray(claims)) {
-      throw new Error('Invalid claims database format');
-    }
-
-    return claims;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return [];
-    }
-
-    throw error;
-  }
-}
-
-// Save claims to JSON storage
-async function saveClaims(claims) {
-  await fs.writeFile(
-    CLAIMS_FILE,
-    JSON.stringify(claims, null, 2),
-    'utf-8'
-  );
-}
-
-// Read reports to verify that the claimed items exist
-async function getReports() {
-  try {
-    const data = await fs.readFile(REPORTS_FILE, 'utf-8');
-    const reports = JSON.parse(data);
-
-    if (!Array.isArray(reports)) {
-      throw new Error('Invalid reports database format');
-    }
-
-    return reports;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return [];
-    }
-
-    throw error;
-  }
-}
 
 // GET /api/claims
 // Never expose contact information through this public endpoint.
 router.get('/', async (req, res, next) => {
   try {
-    const claims = await getClaims();
-
-    const publicClaims = claims.map(
-      ({ contact, ...claim }) => claim
-    );
+    const claims = await getDB()
+      .collection('claims')
+      .find(
+        {},
+        { projection: { _id: 0, contact: 0 } }
+      )
+      .toArray();
 
     res.status(200).json({
       success: true,
-      count: publicClaims.length,
-      claims: publicClaims
+      count: claims.length,
+      claims
     });
   } catch (error) {
     next(error);
@@ -130,25 +76,29 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    // Verify both reports exist and have the correct types
-    const reports = await getReports();
+    const db = getDB();
+    const reportsCollection = db.collection('reports');
+    const claimsCollection = db.collection('claims');
 
-    const lostReport = reports.find(
-      report => report.id === cleanLostId
-    );
+    // Verify both reports exist and have correct types
+    const lostReport = await reportsCollection.findOne({
+      id: cleanLostId,
+      type: 'LOST'
+    });
 
-    const foundReport = reports.find(
-      report => report.id === cleanFoundId
-    );
+    const foundReport = await reportsCollection.findOne({
+      id: cleanFoundId,
+      type: 'FOUND'
+    });
 
-    if (!lostReport || lostReport.type !== 'LOST') {
+    if (!lostReport) {
       return res.status(404).json({
         success: false,
         message: 'Valid lost item report not found'
       });
     }
 
-    if (!foundReport || foundReport.type !== 'FOUND') {
+    if (!foundReport) {
       return res.status(404).json({
         success: false,
         message: 'Valid found item report not found'
@@ -165,15 +115,12 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    const claims = await getClaims();
-
-    // Prevent duplicate pending claims for the same pair
-    const duplicateClaim = claims.some(
-      claim =>
-        claim.lostItemId === cleanLostId &&
-        claim.foundItemId === cleanFoundId &&
-        claim.status === 'PENDING'
-    );
+    // Prevent duplicate pending claims
+    const duplicateClaim = await claimsCollection.findOne({
+      lostItemId: cleanLostId,
+      foundItemId: cleanFoundId,
+      status: 'PENDING'
+    });
 
     if (duplicateClaim) {
       return res.status(409).json({
@@ -191,10 +138,10 @@ router.post('/', async (req, res, next) => {
       createdAt: new Date().toISOString()
     };
 
-    claims.push(newClaim);
-    await saveClaims(claims);
+    // Store claim in MongoDB
+    await claimsCollection.insertOne(newClaim);
 
-    // Do not send private contact information back in the response
+    // Never return private contact information
     const { contact: privateContact, ...publicClaim } = newClaim;
 
     res.status(201).json({
@@ -202,6 +149,7 @@ router.post('/', async (req, res, next) => {
       message: 'Claim submitted successfully',
       claim: publicClaim
     });
+
   } catch (error) {
     next(error);
   }

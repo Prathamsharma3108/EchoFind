@@ -5,11 +5,12 @@ import dotenv from 'dotenv';
 
 import reportRoutes from './routes/reports.js';
 import claimRoutes from './routes/claims.js';
+import { connectDB } from './config/db.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
 // Global middleware
 app.use(cors());
@@ -54,7 +55,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`EchoFind API running at http://localhost:${PORT}`);
-});
+// Connect to MongoDB before accepting requests
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`EchoFind API running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start EchoFind:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
