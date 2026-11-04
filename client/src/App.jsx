@@ -2,8 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const API_BASE_URL = 'http://localhost:5050';
-
+const API_BASE_URL = 'https://echofind-api.onrender.com';
 function App() {
   const [view, setView] = useState('home');
   const [isRecording, setIsRecording] = useState(false);
